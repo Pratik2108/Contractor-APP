@@ -7,6 +7,16 @@ export async function getDemoUsers() {
   return await prisma.user.findMany();
 }
 
+export async function authenticateUser(username: string, password: string) {
+  const user = await prisma.user.findUnique({
+    where: { username }
+  });
+  if (user && user.password === password) {
+    return user;
+  }
+  return null;
+}
+
 // Fetch all jobs for the Owner Dashboard
 export async function getOwnerDashboardData() {
   const jobs = await prisma.jobSite.findMany({

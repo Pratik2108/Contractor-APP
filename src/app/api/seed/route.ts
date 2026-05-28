@@ -13,7 +13,8 @@ export async function GET() {
     const owner = await prisma.user.create({
       data: {
         name: 'Demo Contractor',
-        email: 'owner@go2roofing.test',
+        username: 'Cont1',
+        password: 'Cont1',
         role: 'OWNER',
       },
     });
@@ -22,7 +23,8 @@ export async function GET() {
     const employee = await prisma.user.create({
       data: {
         name: 'Demo Employee',
-        email: 'employee@go2roofing.test',
+        username: 'EMP1',
+        password: 'EMP123',
         role: 'EMPLOYEE',
       },
     });

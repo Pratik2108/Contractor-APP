@@ -1,46 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getDemoUsers } from '@/actions/dbActions';
-import { useAuth, User } from '@/context/AuthContext';
-import { Building2, UserCircle2, HardHat } from 'lucide-react';
+import { useState } from 'react';
+import { authenticateUser } from '@/actions/dbActions';
+import { useAuth } from '@/context/AuthContext';
+import { Building2 } from 'lucide-react';
 
 export default function LoginScreen() {
   const { login } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const data = await getDemoUsers();
-        // If empty, hit seed endpoint
-        if (data.length === 0) {
-          await fetch('/api/seed');
-          const seededData = await getDemoUsers();
-          setUsers(seededData as User[]);
-        } else {
-          setUsers(data as User[]);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    // Auto-seed on first login attempt if DB is empty
+    await fetch('/api/seed');
+    
+    try {
+      const user = await authenticateUser(username, password);
+      if (user) {
+        // @ts-ignore
+        login(user);
+      } else {
+        setError('Invalid username or password');
       }
+    } catch (err) {
+      setError('An error occurred');
+    } finally {
+      setLoading(false);
     }
-    fetchUsers();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  const owner = users.find(u => u.role === 'OWNER');
-  const employee = users.find(u => u.role === 'EMPLOYEE');
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-slate-50">
@@ -49,39 +42,43 @@ export default function LoginScreen() {
           <Building2 className="w-12 h-12 text-white" />
         </div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Go2Roofing Command</h1>
-        <p className="text-slate-500 mt-2">Demo Environment Login</p>
+        <p className="text-slate-500 mt-2">Sign in to your account</p>
       </div>
 
-      <div className="w-full max-w-md space-y-4">
-        {owner && (
-          <button
-            onClick={() => login(owner)}
-            className="w-full flex items-center p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-500 transition-all group"
-          >
-            <div className="bg-blue-50 text-blue-600 p-3 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
-              <UserCircle2 className="w-8 h-8" />
-            </div>
-            <div className="ml-4 text-left">
-              <h2 className="text-lg font-bold text-slate-900">Login as Demo Owner</h2>
-              <p className="text-sm text-slate-500">Access Command Center Dashboard</p>
-            </div>
-          </button>
-        )}
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm font-medium">{error}</div>}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+          <input 
+            type="text" 
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+          <input 
+            type="password" 
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500"
+            required
+          />
+        </div>
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Signing in...' : 'Sign In'}
+        </button>
+      </form>
 
-        {employee && (
-          <button
-            onClick={() => login(employee)}
-            className="w-full flex items-center p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:amber-500 transition-all group"
-          >
-            <div className="bg-amber-50 text-amber-600 p-3 rounded-lg group-hover:bg-amber-500 group-hover:text-white transition-colors">
-              <HardHat className="w-8 h-8" />
-            </div>
-            <div className="ml-4 text-left">
-              <h2 className="text-lg font-bold text-slate-900">Login as Demo Employee</h2>
-              <p className="text-sm text-slate-500">Access Field Mobile View</p>
-            </div>
-          </button>
-        )}
+      <div className="mt-8 text-xs text-slate-500 text-center space-y-1">
+        <p><strong>Employee:</strong> EMP1 / EMP123</p>
+        <p><strong>Contractor:</strong> Cont1 / Cont1</p>
       </div>
     </div>
   );
