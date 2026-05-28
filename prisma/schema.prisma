@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  role      String    // 'OWNER', 'EMPLOYEE'
+  jobs      JobSite[] @relation("AssignedCrew")
+  timeLogs  TimeLog[]
+  photos    Photo[]
+}
+
+model JobSite {
+  id            String    @id @default(cuid())
+  poNumber      String
+  clientName    String
+  address       String
+  status        String    // 'UNSCHEDULED', 'SCHEDULED', 'IN_PROGRESS', 'COMPLETED'
+  assignedCrewId String?
+  assignedCrew  User?     @relation("AssignedCrew", fields: [assignedCrewId], references: [id])
+  tasks         Task[]
+  timeLogs      TimeLog[]
+  photos        Photo[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         JobSite  @relation(fields: [jobId], references: [id])
+  description String
+  isCompleted Boolean  @default(false)
+}
+
+model TimeLog {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  jobId       String
+  job         JobSite   @relation(fields: [jobId], references: [id])
+  clockInTime DateTime  @default(now())
+  clockOutTime DateTime?
+  photoUrl    String?
+}
+
+model Photo {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         JobSite  @relation(fields: [jobId], references: [id])
+  uploadedById String
+  uploadedBy  User     @relation(fields: [uploadedById], references: [id])
+  category    String   // 'BEFORE', 'DURING', 'AFTER'
+  imageUrl    String
+  timestamp   DateTime @default(now())
+}
