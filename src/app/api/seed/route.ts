@@ -9,10 +9,10 @@ export async function GET() {
       return NextResponse.json({ message: 'Database already seeded' });
     }
 
-    // Create Demo Owner
+    // Create Demo Owner (Contractor)
     const owner = await prisma.user.create({
       data: {
-        name: 'Demo Owner',
+        name: 'Demo Contractor',
         email: 'owner@go2roofing.test',
         role: 'OWNER',
       },
@@ -21,8 +21,8 @@ export async function GET() {
     // Create Demo Employee
     const employee = await prisma.user.create({
       data: {
-        name: 'Alex The Roofer',
-        email: 'alex@go2roofing.test',
+        name: 'Demo Employee',
+        email: 'employee@go2roofing.test',
         role: 'EMPLOYEE',
       },
     });
